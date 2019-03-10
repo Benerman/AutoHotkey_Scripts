@@ -22,19 +22,17 @@ SendMode Input
 CoordMode, Mouse, Screen
 DetectHiddenWindows, on
 
-headphones:=false
+headphones:=false 
 #a::
 
 
-If (headphones)
+If (headphones) ; this is for toggling between the two
 		{
-		swapAudioOutput(0)
-		
+		swapAudioOutput(0)		
 		}
 	else
 		{
-		swapAudioOutput(2)
-		title = Corsair Headphones
+		swapAudioOutput(2)	
 		}
 	headphones := !headphones
 return
@@ -44,11 +42,10 @@ audTaskBarIconX = 3648
 audTaskBarIconY = 2139
 audDropdownMenuX = 3613
 audDropdownMenuY = 2006
-If device = 0
-		title = Planar Monitor
+If device = 0 ; specify the first device number here
+		title = Planar Monitor ; name of first audio Output
 	else
-		title = Corsair Headphones
-TBarGrey =
+		title = Corsair Headphones ; name of other audio output 
 MouseGetPos, mouseX, mouseY, Wid, control
 WinActivate, ahk_class Windows.UI.Core.CoreWindow
 Click, %audTaskBarIconX%, %audTaskBarIconY% ; Clicking on the Audio Icon on Task Bar (I have Small Taskbar Icons on)
