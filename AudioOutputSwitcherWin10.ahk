@@ -20,6 +20,8 @@
 ; audDevName2 := Corsair Headphones
 
 
+; global variables were used to get this working across the board as it was an include.
+
 #SingleInstance Force
 #NoEnv
 #WinActivateForce
@@ -27,13 +29,16 @@ SetTitleMatchMode, 2
 SendMode Input
 CoordMode, Mouse, Screen
 DetectHiddenWindows, on
+SetWorkingDir, C:\Users\ADINN\Documents\AutoHotkey ; Change this as needed
+
 
 headphones:=false
-audiodevice1 := 0
-audiodevice2 := 2
+global audDev1 := 0  ; Starting at 0 count down from the top of the available audio outputs to find your selection
+global audDev2 := 3  ; These are feeding the swapAudioOutput() and need to be global, not sure if a better way exists currently
+
 
 #a::
-If (headphones) ; this is for toggling between the two
+If (headphones) ; this is for toggling between the two options
 		{
 		swapAudioOutput(audDev1)		
 		}
@@ -44,49 +49,63 @@ If (headphones) ; this is for toggling between the two
 	headphones := !headphones
 return
 
+
 swapAudioOutput(device)	{
-audTaskBarIconX = 3648
-audTaskBarIconY = 2139
-audDropdownMenuX = 3613
-audDropdownMenuY = 2006
-If device = 0 ; specify the first device number here
-		title = %audDevName1% ; name of first audio Output
-	else
-		title = %audDevName2% ; name of other audio output
-If mouseX < 0
-		display := 1080p
-	else
-		display := 4k 
-If display = 1080p ; this fixes the scaling differences between screens
+audDevName1 := "Planar Monitor"
+audDevName2 := "Corsair Headphones"
+audTaskBarIconX := 3684
+audTaskBarIconY := 2140
+scalingPercent := 125 ; input scaling percent NUMBERS ONLY Only if you have second screen with different scaling settings
+
+If device = %audDev1% ; assigns a title for the traytip
 		{
-		mouseX := mouseX * 1.25 ; either dived or multiply by percentage.
-		mouseY := mouseY * 1.25
+		audiotitle = %audDevName1% ; name of first audio Output
+		}
+	else
+		{
+		audiotitle = %audDevName2% ; name of other audio output
 		}
 MouseGetPos, mouseX, mouseY, Wid, control
-WinActivate, ahk_class Windows.UI.Core.CoreWindow
-Click, %audTaskBarIconX%, %audTaskBarIconY% ; Clicking on the Audio Icon on Task Bar (I have Small Taskbar Icons on)
-If WinExist("ahk_class Windows.UI.Core.CoreWindow")
-Sleep, 320
-Click, %audDropdownMenuX%, %audDropdownMenuY%
-Sleep, 100
-Send, {tab}
-;Sleep, 50
-Send, {Home}
-If device != 0
+; Fixing the different scaling settings for mouse later. Second screen is to the left of my main so I can easily detect which screen I am on.
+; If you 
+If mouseX < 0  
 		{
-		Send, {Down %device%}
+		display := -1 ; 1080p screen with 100% scaling
+		mouseXold := mouseX  ; Just for testing purposes so I could print out values
+		mouseYold := mouseY  ; Just for testing purposes so I could print out values
+		mouseX := mouseX / (scalingPercent / 100)  ; Factors the Windows scaling in and outputs proper coordinates when returning position
+		mouseY := mouseY / (scalingPercent / 100)
 		}
-;	else      ; should not need this else statement
-;		{
-;		Send, {Home}
-;		}
+	else
+		{
+		display := 1 ; 4k screen with 125% scaling
+		}
+Click, %audTaskBarIconX%, %audTaskBarIconY%  ; Needed to click twice for some reason for it to reliably work.
+Click, %audTaskBarIconX%, %audTaskBarIconY%  ; Clicking on the Audio Icon on Task Bar (I have Small Taskbar Icons on)
+WinWaitActive, ahk_class Windows.UI.Core.CoreWindow  ; Waits for the audio output menu to open
+Send, {tab}
 Send, {Enter}
-Send, {Esc}
-MouseMove, mouseX, mouseY
-WinActivate, ahk_id %Wid%
+SLEEP, 50
+if device == 0 
+	{
+	Send, {tab}
+	Send, {Home}
+	Send, {Enter}
+	Send, {Esc}
+	}
+else ;if device > 0
+		{
+		Send, {tab}
+		Send, {Home}
+		Send, {Down %device%}
+		Send, {Esc}
+		}
+MouseMove, mouseX, mouseY ; moves cursor to where it was previously
+WinActivate, ahk_id %Wid% ; activates window that was active last
 SoundPlay, *64  ; Asterisk (info)
-TrayTip, %MatchedTitle%, %title% is now active, 2, 17 ; 2 seconds, info icon (1) without sound (+16)
+TrayTip, %MatchedTitle%, %audiotitle% is now active, 2, 17 ; 2 seconds, info icon (1) without sound (+16)
 SetTimer, removeTrayTip1, 2000  ; TrayTip durations under 10 seconds don't work, remove ourselves after 2 second timer		
+;MsgBox, audiotitle = %audiotitle%`ndevice = %device%`ndisplay = %display%`nOld Mouse X = %mouseXold% || Old Mouse Y = %mouseYold%`n Mouse X = %mouseX% || Mouse Y = %mouseY%`n Audio Device 1 = %audDev1%`nAudio Device 2 = %audDev2%; For Troubleshooting/Testing
 } ;End Function
 
 removeTrayTip1() {
