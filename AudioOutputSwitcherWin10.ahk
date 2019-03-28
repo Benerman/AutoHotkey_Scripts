@@ -29,7 +29,7 @@ SetTitleMatchMode, 2
 SendMode Input
 CoordMode, Mouse, Screen
 DetectHiddenWindows, on
-SetWorkingDir, C:\Users\ADINN\Documents\AutoHotkey ; Change this as needed
+SetWorkingDir, %A_ScriptDir% ; Change this as needed
 
 
 headphones:=false
